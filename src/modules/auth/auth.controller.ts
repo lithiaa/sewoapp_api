@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiCreatedResponse } from '@nestjs/swagger';
@@ -43,5 +45,15 @@ export class AuthController {
       data: data,
       message: 'The user has been logged in successfully',
     };
+  }
+
+  @Get('verify-email')
+  @ApiCreatedResponse({
+    description: 'Email verified successfully',
+    type: Object,
+  })
+  async verifyEmail(@Query('token') token: string) {
+    if (!token) throw new BadRequestException('Token is required');
+    return this.authService.verifyEmail(token);
   }
 }
