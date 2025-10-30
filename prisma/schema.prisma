@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js" 
+  output        = "../generated/prisma"
+  moduleFormat  = "esm"              
+  engineType    = "binary"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+  PARTNER
+}
+
+enum VerificationType {
+  KTP
+  SIM
+  PASSPORT
+  NPWP
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User{
+  id Int @id @default(autoincrement())
+  fullname String
+  email String @unique
+  password String
+  phone_number String @unique
+  address String
+  role Role @default(CUSTOMER)
+  is_verified Boolean @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  verification UserVerification? @relation("UserVerification")
+  verified_records UserVerification[] @relation("UserVerificationAdmin")
+
+  @@map("users")
+}
+
+model UserVerification{
+  id Int @id @default(autoincrement())
+  user_id Int @unique
+  verif_type VerificationType
+  document_number String
+  document_url String
+  selfie_url String
+  verification_status VerificationStatus @default(PENDING)
+  verified_by Int?
+  verified_at DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation("UserVerification", fields: [user_id], references: [id])
+  verifiedBy User? @relation("UserVerificationAdmin", fields: [verified_by], references: [id])
+
+  @@map("user_verifications")
+}
