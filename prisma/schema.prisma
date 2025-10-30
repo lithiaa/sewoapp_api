@@ -22,6 +22,19 @@ enum Role {
   PARTNER
 }
 
+enum VerificationType {
+  KTP
+  SIM
+  PASSPORT
+  NPWP
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User{
   id Int @id @default(autoincrement())
   fullname String
@@ -34,5 +47,27 @@ model User{
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  verification UserVerification? @relation("UserVerification")
+  verified_records UserVerification[] @relation("UserVerificationAdmin")
+
   @@map("users")
+}
+
+model UserVerification{
+  id Int @id @default(autoincrement())
+  user_id Int @unique
+  verif_type VerificationType
+  document_number String
+  document_url String
+  selfie_url String
+  verification_status VerificationStatus @default(PENDING)
+  verified_by Int?
+  verified_at DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation("UserVerification", fields: [user_id], references: [id])
+  verifiedBy User? @relation("UserVerificationAdmin", fields: [verified_by], references: [id])
+
+  @@map("user_verifications")
 }

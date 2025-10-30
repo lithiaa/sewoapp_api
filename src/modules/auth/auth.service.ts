@@ -100,17 +100,16 @@ export class AuthService {
       });
 
       if (!user) throw new UnauthorizedException('User not found');
-      if (user.is_verified)
-        return { message: 'Email sudah diverifikasi sebelumnya' };
+      if (user.is_verified) return { message: 'Email has been verified' };
 
       await this.prisma.user.update({
         where: { email: decoded.email },
         data: { is_verified: true },
       });
 
-      return { message: 'Email berhasil diverifikasi' };
+      return { message: 'Email verified successfully' };
     } catch (error) {
-      throw new BadRequestException('Token tidak valid atau sudah kadaluarsa');
+      throw new BadRequestException('Invalid token or token has expired');
     }
   }
 }
