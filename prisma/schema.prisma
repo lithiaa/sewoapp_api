@@ -35,6 +35,12 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum VehicleStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+}
+
 model User{
   id Int @id @default(autoincrement())
   fullname String
@@ -49,6 +55,7 @@ model User{
 
   verification UserVerification? @relation("UserVerification")
   verified_records UserVerification[] @relation("UserVerificationAdmin")
+  vehicles Vehicle[] @relation("partnerVehicles")
 
   @@map("users")
 }
@@ -70,4 +77,36 @@ model UserVerification{
   verifiedBy User? @relation("UserVerificationAdmin", fields: [verified_by], references: [id])
 
   @@map("user_verifications")
+}
+
+model Category{
+  id Int @id @default(autoincrement())
+  name String @unique
+  description String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  vehicles Vehicle[] @relation("CategoryVehicles")
+
+  @@map("categories")
+}
+
+model Vehicle{
+  id Int @id @default(autoincrement())
+  partner_id Int
+  category_id Int
+  vehicle_name String
+  price Float
+  vehicle_year Int
+  license_plate String @unique
+  description String?
+  status VehicleStatus @default(AVAILABLE)
+  image_url String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  partner User @relation("partnerVehicles", fields: [partner_id], references: [id])
+  category Category @relation("CategoryVehicles", fields: [category_id], references: [id])
+
+  @@map("vehicles")
 }

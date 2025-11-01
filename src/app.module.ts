@@ -5,9 +5,10 @@ import { PrismaModule } from './infra/database/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { VerificationModule } from './modules/verification/verification.module';
 import { CloudinaryModule } from './infra/cloudinary/cloudinary.module';
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, VerificationModule, CloudinaryModule],
+  imports: [PrismaModule, AuthModule, VerificationModule, CloudinaryModule, CategoryModule],
   controllers: [AppController],
   providers: [AppService],
 })
