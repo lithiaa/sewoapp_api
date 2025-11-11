@@ -8,7 +8,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { VehicleStatus } from 'generated/prisma';
+import { TransmissionType, VehicleStatus } from 'generated/prisma';
 
 export class CreateVehicleDto {
   @ApiProperty({
@@ -75,6 +75,40 @@ export class CreateVehicleDto {
   })
   @IsNotEmpty({ message: 'Vehicle status is required' })
   status: VehicleStatus;
+
+  @ApiProperty({
+    example: '7',
+    description: 'The seating capacity of the vehicle',
+  })
+  @IsNotEmpty({ message: 'Capacity is required' })
+  @IsNumber({}, { message: 'Capacity must be a number' })
+  @Type(() => Number)
+  capacity: number;
+
+  @ApiProperty({
+    example: 'AUTOMATIC',
+    enum: TransmissionType,
+    description: 'The transmission type of the vehicle',
+  })
+  @IsEnum(TransmissionType, {
+    message: 'Transmission type must be automatic, manual or hybrid',
+  })
+  @IsNotEmpty({ message: 'Transmission type is required' })
+  transmission: TransmissionType;
+
+  @ApiProperty({
+    example: 'Mesin 1.5L, AC, Power Steering',
+    description: 'The specifications of the vehicle',
+  })
+  @IsString({ message: 'Specification must be a string' })
+  specification: string;
+
+  @ApiProperty({
+    example: 'GPS, Airbags, Bluetooth',
+    description: 'The features of the vehicle',
+  })
+  @IsString({ message: 'Features must be a string' })
+  features: string;
 
   @IsOptional()
   image_url?: string;

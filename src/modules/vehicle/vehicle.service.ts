@@ -3,6 +3,8 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 import { CloudinaryService } from 'src/infra/cloudinary/cloudinary.service';
+import { GetVehiclesFilterDto } from './dto/get-vehicle-filter.dto';
+import { Prisma } from 'generated/prisma';
 
 @Injectable()
 export class VehicleService {
@@ -30,8 +32,11 @@ export class VehicleService {
     return result;
   }
 
-  async findAll() {
+  async findAll(query: GetVehiclesFilterDto) {
+    const where = this.buildWhereClause(query);
+
     const result = await this.prisma.vehicle.findMany({
+      where,
       orderBy: { created_at: 'desc' },
       select: {
         id: true,
@@ -42,6 +47,12 @@ export class VehicleService {
         description: true,
         status: true,
         image_url: true,
+        transmission: true,
+        specification: true,
+        features: true,
+        capacity: true,
+        created_at: true,
+        updated_at: true,
         partner: {
           select: {
             id: true,
@@ -95,5 +106,48 @@ export class VehicleService {
     });
 
     return result;
+  }
+
+  private buildWhereClause(
+    query: GetVehiclesFilterDto,
+  ): Prisma.VehicleWhereInput {
+    const { category, transmission, capacity, minPrice, maxPrice } = query;
+
+    const where: Prisma.VehicleWhereInput = {};
+
+    if (category) {
+      where.category = { name: category };
+    }
+
+    if (transmission) {
+      where.transmission = transmission;
+    }
+
+    if (capacity) {
+      where.capacity = this.mapCapacityToRange(capacity);
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.price = {};
+      if (minPrice !== undefined) where.price.gte = minPrice;
+      if (maxPrice !== undefined) where.price.lte = maxPrice;
+    }
+
+    return where;
+  }
+
+  private mapCapacityToRange(
+    capacity: 'small' | 'medium' | 'large',
+  ): Prisma.IntFilter {
+    switch (capacity) {
+      case 'small':
+        return { lt: 4 };
+      case 'medium':
+        return { gte: 4, lte: 6 };
+      case 'large':
+        return { gt: 6 };
+      default:
+        return {};
+    }
   }
 }

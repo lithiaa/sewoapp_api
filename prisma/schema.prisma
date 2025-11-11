@@ -41,6 +41,12 @@ enum VehicleStatus {
   MAINTENANCE
 }
 
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+  HYBRID
+}
+
 model User{
   id Int @id @default(autoincrement())
   fullname String
@@ -106,7 +112,7 @@ model Category{
   @@map("categories")
 }
 
-model Vehicle{
+ model Vehicle{
   id Int @id @default(autoincrement())
   partner_id Int
   category_id Int
@@ -117,6 +123,10 @@ model Vehicle{
   description String?
   status VehicleStatus @default(AVAILABLE)
   image_url String
+  transmission TransmissionType
+  specification String @db.MediumText
+  features String @db.MediumText
+  capacity Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
