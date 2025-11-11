@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -12,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from '../../infra/auth/jwt.interface';
 import { MailService } from 'src/infra/mail/mail.service';
+import { randomInt } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -37,6 +39,16 @@ export class AuthService {
       },
     });
 
+    const otp = randomInt(100000, 999999).toString();
+
+    await this.prisma.otpVerification.create({
+      data: {
+        user_id: result.id,
+        otp_code: otp,
+        expires_at: new Date(Date.now() + 5 * 60 * 1000),
+      },
+    });
+
     const emailToken = this.jwtService.sign(
       { email: result.email },
       { secret: process.env.EMAIL_SECRET, expiresIn: '1d' },
@@ -46,13 +58,13 @@ export class AuthService {
 
     await this.mailService.sendMail(
       result.email,
-      'Verifikasi Email Anda',
+      'Verifikasi Akun Anda',
       `
         <h2>Halo, ${result.fullname}!</h2>
         <p>Terima kasih sudah mendaftar di SewoApp.</p>
-        <p>Silakan klik tautan berikut untuk memverifikasi email Anda:</p>
-        <a href="${verifUrl}" target="_blank">Verifikasi Sekarang</a>
-        <p>Link ini akan kadaluarsa dalam 1 jam.</p>
+        <p>Kode OTP Anda adalah:</p>
+        <h1>${otp}</h1>
+        <p>Kode ini berlaku selama 5 menit.</p>
       `,
     );
 
@@ -89,27 +101,36 @@ export class AuthService {
     };
   }
 
-  async verifyEmail(token: string) {
-    try {
-      const decoded = this.jwtService.verify(token, {
-        secret: process.env.EMAIL_SECRET,
-      });
+  async verifyOtp(email: string, otp: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) throw new NotFoundException('User not found');
 
-      const user = await this.prisma.user.findUnique({
-        where: { email: decoded.email },
-      });
+    const otpRecord = await this.prisma.otpVerification.findFirst({
+      where: {
+        user_id: user.id,
+        otp_code: otp,
+      },
+      orderBy: { created_at: 'desc' },
+    });
 
-      if (!user) throw new UnauthorizedException('User not found');
-      if (user.is_verified) return { message: 'Email has been verified' };
+    if (!otpRecord)
+      throw new BadRequestException('Invalid OTP, please try again.');
 
-      await this.prisma.user.update({
-        where: { email: decoded.email },
-        data: { is_verified: true },
-      });
-
-      return { message: 'Email verified successfully' };
-    } catch (error) {
-      throw new BadRequestException('Invalid token or token has expired');
+    if (otpRecord.expires_at < new Date()) {
+      throw new BadRequestException(
+        'OTP has expired, please request a new one.',
+      );
     }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { is_verified: true },
+    });
+
+    await this.prisma.otpVerification.delete({
+      where: { id: otpRecord.id },
+    });
+
+    return { message: 'Email verified successfully' };
   }
 }

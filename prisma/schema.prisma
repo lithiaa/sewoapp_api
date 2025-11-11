@@ -56,8 +56,22 @@ model User{
   verification UserVerification? @relation("UserVerification")
   verified_records UserVerification[] @relation("UserVerificationAdmin")
   vehicles Vehicle[] @relation("partnerVehicles")
+  otp_verifications OtpVerification[] @relation("OtpVerification")
 
   @@map("users")
+}
+
+model OtpVerification {
+  id Int @id @default(autoincrement())
+  user_id Int
+  otp_code String
+  expires_at DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation("OtpVerification", fields: [user_id], references: [id])
+
+  @@map("otp_verifications")
 }
 
 model UserVerification{
