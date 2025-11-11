@@ -12,11 +12,12 @@ import {
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'generated/prisma';
+import { CategoryEntity } from './entities/category.entity';
 
 @Controller('category')
 @ApiTags('category')
@@ -27,6 +28,10 @@ export class CategoryController {
 
   @Roles(Role.ADMIN)
   @Post()
+  @ApiCreatedResponse({
+    description: 'Category created succesfully',
+    type: CategoryEntity,
+  })
   async create(@Body() dto: CreateCategoryDto) {
     const data = await this.categoryService.create(dto);
 
@@ -37,6 +42,10 @@ export class CategoryController {
   }
 
   @Get()
+  @ApiCreatedResponse({
+    description: 'Categories retrieved successfully',
+    type: CategoryEntity,
+  })
   async findAll() {
     const data = await this.categoryService.findAll();
     return {
@@ -46,6 +55,10 @@ export class CategoryController {
   }
 
   @Get(':id')
+  @ApiCreatedResponse({
+    description: 'Category retrieved succesfully',
+    type: CategoryEntity,
+  })
   async findOne(@Param('id') id: string) {
     const data = await this.categoryService.findOne(+id);
     return {
@@ -56,6 +69,10 @@ export class CategoryController {
 
   @Roles(Role.ADMIN)
   @Patch(':id')
+  @ApiCreatedResponse({
+    description: 'Category updated sucessfully',
+    type: CategoryEntity,
+  })
   async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
     const data = await this.categoryService.update(+id, dto);
     return {
@@ -66,6 +83,9 @@ export class CategoryController {
 
   @Roles(Role.ADMIN)
   @Delete(':id')
+  @ApiCreatedResponse({
+    description: 'Category deleted successfully',
+  })
   async remove(@Param('id') id: string) {
     const data = await this.categoryService.remove(+id);
     return {
