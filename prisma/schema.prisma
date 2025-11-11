@@ -44,6 +44,7 @@ enum VehicleStatus {
 model User{
   id Int @id @default(autoincrement())
   fullname String
+  username String @unique
   email String @unique
   password String
   phone_number String @unique
