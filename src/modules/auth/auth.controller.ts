@@ -47,13 +47,12 @@ export class AuthController {
     };
   }
 
-  @Get('verify-email')
+  @Get('verify')
   @ApiCreatedResponse({
     description: 'Email verified successfully',
     type: Object,
   })
-  async verifyEmail(@Query('token') token: string) {
-    if (!token) throw new BadRequestException('Token is required');
-    return this.authService.verifyEmail(token);
+  async verifyOtp(@Body() dto: { email: string; otp: string }) {
+    return this.authService.verifyOtp(dto.email, dto.otp);
   }
 }
