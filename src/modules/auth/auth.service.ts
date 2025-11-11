@@ -49,13 +49,6 @@ export class AuthService {
       },
     });
 
-    const emailToken = this.jwtService.sign(
-      { email: result.email },
-      { secret: process.env.EMAIL_SECRET, expiresIn: '1d' },
-    );
-
-    const verifUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${emailToken}`;
-
     await this.mailService.sendMail(
       result.email,
       'Verifikasi Akun Anda',
