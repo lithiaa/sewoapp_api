@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  Query,
 } from '@nestjs/common';
 import { VehicleService } from './vehicle.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
@@ -27,6 +28,7 @@ import { VehicleEntity } from './entities/vehicle.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'generated/prisma';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { GetVehiclesFilterDto } from './dto/get-vehicle-filter.dto';
 
 @Controller('vehicle')
 @ApiTags('vehicle')
@@ -67,8 +69,8 @@ export class VehicleController {
     description: 'Vehicles retrieved successfully',
     type: VehicleEntity,
   })
-  async findAll() {
-    const data = await this.vehicleService.findAll();
+  async findAll(@Query() query: GetVehiclesFilterDto) {
+    const data = await this.vehicleService.findAll(query);
 
     return {
       data,
