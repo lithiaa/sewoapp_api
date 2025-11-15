@@ -64,6 +64,8 @@ model User{
   verified_records UserVerification[] @relation("UserVerificationAdmin")
   vehicles Vehicle[] @relation("partnerVehicles")
   otp_verifications OtpVerification[] @relation("OtpVerification")
+  ratings Rating[] @relation("CustomerRatings")
+  favorites Favorite[] @relation("CustomerFavorites")
 
   @@map("users")
 }
@@ -132,6 +134,36 @@ model Category{
 
   partner User @relation("partnerVehicles", fields: [partner_id], references: [id])
   category Category @relation("CategoryVehicles", fields: [category_id], references: [id])
+  ratings Rating[] @relation("VehicleRatings")
+  favorites Favorite[] @relation("VehicleFavorites")
 
   @@map("vehicles")
+}
+
+model Rating{
+  id Int @id @default(autoincrement())
+  customer_id Int
+  vehicle_id Int
+  rating Int
+  review String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  customer User @relation("CustomerRatings", fields: [customer_id], references: [id])
+  vehicle Vehicle @relation("VehicleRatings", fields: [vehicle_id], references: [id])
+
+  @@map("ratings")
+}
+
+model Favorite {
+  id Int @id @default(autoincrement())
+  customer_id Int
+  vehicle_id Int
+  created_at DateTime @default(now())
+
+  customer User @relation("CustomerFavorites", fields: [customer_id], references: [id])
+  vehicle Vehicle @relation("VehicleFavorites", fields: [vehicle_id], references: [id])
+
+  @@unique([customer_id, vehicle_id])
+  @@map("favorites")
 }

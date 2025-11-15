@@ -7,9 +7,10 @@ import { VerificationModule } from './modules/verification/verification.module';
 import { CloudinaryModule } from './infra/cloudinary/cloudinary.module';
 import { CategoryModule } from './modules/category/category.module';
 import { VehicleModule } from './modules/vehicle/vehicle.module';
+import { FavoriteModule } from './modules/favorite/favorite.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, VerificationModule, CloudinaryModule, CategoryModule, VehicleModule],
+  imports: [PrismaModule, AuthModule, VerificationModule, CloudinaryModule, CategoryModule, VehicleModule, FavoriteModule],
   controllers: [AppController],
   providers: [AppService],
 })
