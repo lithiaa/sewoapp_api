@@ -24,6 +24,7 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'generated/prisma';
 import { RatingEntity } from './entities/rating.entity';
 import type { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
+import { RatingWithCustomerEntity } from './entities/rating-with-customer.entity';
 
 @Controller('rating')
 @ApiTags('rating')
@@ -51,7 +52,7 @@ export class RatingController {
   @Get(':vehicleId')
   @ApiOkResponse({
     description: 'Ratings retrieved successfully',
-    type: [RatingEntity],
+    type: [RatingWithCustomerEntity],
   })
   async findByVehicle(@Param('vehicleId') vehicleId: number) {
     const data = await this.ratingService.findByVehicle(vehicleId);
