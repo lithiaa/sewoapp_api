@@ -83,6 +83,17 @@ model OtpVerification {
   @@map("otp_verifications")
 }
 
+model PasswordResetToken {
+  id Int @id @default(autoincrement())
+  email String
+  token String @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("password_reset_tokens")
+}
+
 model UserVerification{
   id Int @id @default(autoincrement())
   user_id Int @unique

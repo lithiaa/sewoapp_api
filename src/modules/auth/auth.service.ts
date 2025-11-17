@@ -13,7 +13,12 @@ import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from '../../infra/auth/jwt.interface';
 import { MailService } from 'src/infra/mail/mail.service';
-import { randomInt } from 'crypto';
+import { randomBytes, randomInt } from 'crypto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { CheckResetTokenPasswordDto } from './dto/check-reset-token.dto';
+import { Role } from 'generated/prisma';
+import { RequestForgotPasswordDto } from './dto/request-forgot-password.dto';
+import { RequestForgotPasswordEntity } from './entities/request-forgot-password.entity';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +30,10 @@ export class AuthService {
 
   async register(dto: RegisterDto): Promise<Auth> {
     const { confirm_password, ...userData } = dto;
+
+    if (dto.role === Role.ADMIN) {
+      throw new BadRequestException('ADMIN cannot be registered manually');
+    }
 
     const existingUser = await this.prisma.user.findFirst({
       where: {
@@ -143,5 +152,95 @@ export class AuthService {
     });
 
     return { message: 'Email verified successfully' };
+  }
+
+  async requestForgotPassword(
+    dto: RequestForgotPasswordDto,
+  ): Promise<RequestForgotPasswordEntity> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    // delete existing tokens for the user
+    await this.prisma.passwordResetToken.deleteMany({
+      where: { email: dto.email },
+    });
+
+    const token = randomBytes(4).toString('hex');
+
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    const result = await this.prisma.passwordResetToken.create({
+      data: {
+        email: dto.email,
+        token,
+        expires_at: expiresAt,
+      },
+    });
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${dto.email}`;
+
+    await this.mailService.sendMail(
+      user.email,
+      'Reset Password Request',
+      `
+        <h2>Hello, ${user.fullname}!</h2>
+        <p>You requested to reset your password. Click the link below to reset it:</p>
+        <a href="${resetLink}">Reset Password</a>
+        <p>This link will expire in 15 minutes.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
+      `,
+    );
+
+    return new RequestForgotPasswordEntity(result);
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const record = await this.prisma.passwordResetToken.findFirst({
+      where: {
+        token: dto.token,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    if (!record) throw new BadRequestException('Invalid token');
+
+    if (record.expires_at < new Date()) {
+      throw new BadRequestException('Token has expired');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.user.updateMany({
+      where: { email: record.email },
+      data: { password: hashedPassword },
+    });
+
+    await this.prisma.passwordResetToken.deleteMany({
+      where: { email: record.email },
+    });
+
+    return { message: 'Password has been reset successfully' };
+  }
+
+  async checkResetToken(
+    dto: CheckResetTokenPasswordDto,
+  ): Promise<{ valid: boolean }> {
+    const record = await this.prisma.passwordResetToken.findFirst({
+      where: {
+        token: dto.token,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    if (!record) throw new BadRequestException('Invalid token');
+
+    if (record.expires_at < new Date()) {
+      throw new BadRequestException('Token has expired');
+    }
+
+    return { valid: true };
   }
 }

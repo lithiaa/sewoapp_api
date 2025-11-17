@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, MinLength } from 'class-validator';
+import { Role } from 'generated/prisma';
 import { Match } from 'src/common/decorators/match.decorator';
 
 export class RegisterDto {
@@ -37,4 +38,9 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'Confirmation password should not be empty' })
   @Match('password', { message: 'Confirmation password must match password' })
   confirm_password: string;
+
+  @ApiProperty()
+  @IsNotEmpty({ message: 'Role should not be empty' })
+  @IsEnum(Role, { message: 'role must be a valid enum value' })
+  role: Role;
 }
