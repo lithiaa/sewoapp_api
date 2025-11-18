@@ -6,10 +6,11 @@ export class CreateVerificationDto {
   @ApiProperty({
     example: 'KTP',
     enum: VerificationType,
-    description: 'Type of verification document',
+    description:
+      'Type of verification document. Allowed values: KTP, SIM, PASSPORT, NPWP',
   })
   @IsEnum(VerificationType, {
-    message: 'verif_type must be a valid enum value',
+    message: 'verif_type must be KTP, SIM, PASSPORT, or NPWP',
   })
   @IsNotEmpty({ message: 'verif_type should not be empty' })
   verif_type: VerificationType;
