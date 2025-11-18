@@ -1,6 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 
+export class PartnerVehcileEntity {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  fullname: string;
+}
+
+export class CategoryVehicleEntity {
+  @ApiProperty()
+  name: string;
+}
+
 export class VehicleEntity {
   @ApiProperty()
   id: number;
@@ -39,4 +52,13 @@ export class VehicleEntity {
 
   @ApiProperty()
   updated_at: Date;
+
+  @ApiProperty({ type: PartnerVehcileEntity })
+  partner: PartnerVehcileEntity;
+
+  @ApiProperty({ type: CategoryVehicleEntity })
+  category: CategoryVehicleEntity;
+
+  @ApiProperty()
+  is_favorited: boolean;
 }
