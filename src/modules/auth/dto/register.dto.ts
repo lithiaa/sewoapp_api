@@ -39,7 +39,10 @@ export class RegisterDto {
   @Match('password', { message: 'Confirmation password must match password' })
   confirm_password: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    enum: Role,
+    description: 'Role of the user',
+  })
   @IsNotEmpty({ message: 'Role should not be empty' })
   @IsEnum(Role, { message: 'role must be a valid enum value' })
   role: Role;
