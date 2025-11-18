@@ -29,6 +29,7 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'generated/prisma';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { GetVehiclesFilterDto } from './dto/get-vehicle-filter.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('vehicle')
 @ApiTags('vehicle')
@@ -65,12 +66,18 @@ export class VehicleController {
   }
 
   @Get()
+  @Public()
   @ApiCreatedResponse({
     description: 'Vehicles retrieved successfully',
     type: VehicleEntity,
   })
-  async findAll(@Query() query: GetVehiclesFilterDto) {
-    const data = await this.vehicleService.findAll(query);
+  async findAll(
+    @Query() query: GetVehiclesFilterDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user?.id;
+
+    const data = await this.vehicleService.findAll(query, userId);
 
     return {
       data,
@@ -79,12 +86,14 @@ export class VehicleController {
   }
 
   @Get(':id')
+  @Public()
   @ApiCreatedResponse({
     description: 'Vehicle detail retrieved successfully',
     type: VehicleEntity,
   })
-  async findOne(@Param('id') id: string) {
-    const data = await this.vehicleService.findOne(+id);
+  async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    const userId = req.user?.id;
+    const data = await this.vehicleService.findOne(+id, userId);
 
     return {
       data,

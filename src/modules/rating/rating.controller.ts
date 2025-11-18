@@ -25,6 +25,7 @@ import { Role } from 'generated/prisma';
 import { RatingEntity } from './entities/rating.entity';
 import type { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 import { RatingWithCustomerEntity } from './entities/rating-with-customer.entity';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('rating')
 @ApiTags('rating')
@@ -50,6 +51,7 @@ export class RatingController {
   }
 
   @Get(':vehicleId')
+  @Public()
   @ApiOkResponse({
     description: 'Ratings retrieved successfully',
     type: [RatingWithCustomerEntity],

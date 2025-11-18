@@ -5,6 +5,10 @@ import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 import { CloudinaryService } from 'src/infra/cloudinary/cloudinary.service';
 import { GetVehiclesFilterDto } from './dto/get-vehicle-filter.dto';
 import { Prisma } from 'generated/prisma';
+import {
+  VehicleOutput,
+  VehicleWithConditionalFavorites,
+} from './types/vehicle.type';
 
 @Injectable()
 export class VehicleService {
@@ -32,45 +36,76 @@ export class VehicleService {
     return result;
   }
 
-  async findAll(query: GetVehiclesFilterDto) {
+  async findAll(
+    query: GetVehiclesFilterDto,
+    userId?: number,
+  ): Promise<VehicleOutput[]> {
     const where = this.buildWhereClause(query);
+
+    const baseSelect = {
+      id: true,
+      vehicle_name: true,
+      price: true,
+      vehicle_year: true,
+      license_plate: true,
+      description: true,
+      status: true,
+      image_url: true,
+      transmission: true,
+      specification: true,
+      features: true,
+      capacity: true,
+      created_at: true,
+      updated_at: true,
+      partner: {
+        select: {
+          id: true,
+          fullname: true,
+        },
+      },
+      category: {
+        select: {
+          name: true,
+        },
+      },
+    };
+
+    const select = {
+      ...baseSelect,
+      ...(userId && {
+        favorites: {
+          where: {
+            customer_id: userId,
+          },
+          select: {
+            id: true,
+          },
+        },
+      }),
+    };
 
     const result = await this.prisma.vehicle.findMany({
       where,
       orderBy: { created_at: 'desc' },
-      select: {
-        id: true,
-        vehicle_name: true,
-        price: true,
-        vehicle_year: true,
-        license_plate: true,
-        description: true,
-        status: true,
-        image_url: true,
-        transmission: true,
-        specification: true,
-        features: true,
-        capacity: true,
-        created_at: true,
-        updated_at: true,
-        partner: {
-          select: {
-            id: true,
-            fullname: true,
-          },
-        },
-        category: {
-          select: {
-            name: true,
-          },
-        },
-      },
+      select: select,
     });
 
-    return result;
+    return result.map((vehicle) => {
+      const data = vehicle as VehicleWithConditionalFavorites;
+
+      const isFavorited =
+        (userId && data.favorites && data.favorites.length > 0) ?? false;
+
+      const { favorites, ...vehicleWithoutFavorites } = data;
+
+      return {
+        ...vehicleWithoutFavorites,
+        is_favorited: isFavorited,
+      } as VehicleOutput;
+    });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId?: number): Promise<VehicleOutput | null> {
     const result = await this.prisma.vehicle.findUnique({
       where: { id },
       include: {
@@ -85,10 +120,33 @@ export class VehicleService {
             name: true,
           },
         },
+        favorites: userId
+          ? {
+              where: {
+                customer_id: userId,
+              },
+              select: {
+                id: true,
+              },
+            }
+          : false,
       },
     });
 
-    return result;
+    if (!result) return null;
+
+    const isFavorited =
+      userId && Array.isArray(result.favorites) && result.favorites.length > 0
+        ? true
+        : false;
+
+    const { favorites, ...vehicleWithoutFavorites } =
+      result as VehicleWithConditionalFavorites;
+
+    return {
+      ...vehicleWithoutFavorites,
+      is_favorited: isFavorited,
+    };
   }
 
   async update(id: number, updateVehicleDto: UpdateVehicleDto) {
