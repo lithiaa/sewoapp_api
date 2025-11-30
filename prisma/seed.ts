@@ -27,6 +27,7 @@ async function main() {
       phone_number: '0811111111',
       address: 'Jakarta',
       role: Role.ADMIN,
+      is_verified: true,
     },
   });
 
@@ -39,6 +40,7 @@ async function main() {
       phone_number: '0822222222',
       address: 'Bandung',
       role: Role.PARTNER,
+      is_verified: true,
     },
   });
 
@@ -51,6 +53,7 @@ async function main() {
       phone_number: '0833333333',
       address: 'Surabaya',
       role: Role.CUSTOMER,
+      is_verified: true,
     },
   });
 
