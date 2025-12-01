@@ -21,6 +21,7 @@ import {
   ApiConsumes,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -31,6 +32,7 @@ import { Role } from 'generated/prisma';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { GetVehiclesFilterDto } from './dto/get-vehicle-filter.dto';
 import { Public } from 'src/common/decorators/public.decorator';
+import { NearestVehicleEntity } from './entities/get-nearest-vehicle';
 
 @Controller('vehicle')
 @ApiTags('vehicle')
@@ -83,6 +85,28 @@ export class VehicleController {
     return {
       data,
       message: 'Vehicles retrieved successfully',
+    };
+  }
+
+  @Get('nearest')
+  @ApiQuery({ name: 'longitude', required: true })
+  @ApiQuery({ name: 'latitude', required: true })
+  @ApiOkResponse({
+    description: 'Get nearest mitra profiles',
+    type: [NearestVehicleEntity],
+  })
+  async findNearest(
+    @Query('longitude') longitude: string,
+    @Query('latitude') latitude: string,
+  ) {
+    const data = await this.vehicleService.findNearest(
+      Number(latitude),
+      Number(longitude),
+    );
+
+    return {
+      data,
+      message: 'Nearest vehicles retrieved successfully',
     };
   }
 

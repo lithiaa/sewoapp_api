@@ -9,6 +9,8 @@ import {
   VehicleOutput,
   VehicleWithConditionalFavorites,
 } from './types/vehicle.type';
+import { haversineDistance } from 'src/utils/haversine.utils';
+import { NearestVehicleEntity } from './entities/get-nearest-vehicle';
 
 @Injectable()
 export class VehicleService {
@@ -113,6 +115,54 @@ export class VehicleService {
         is_favorited: isFavorited,
       } as VehicleOutput;
     });
+  }
+
+  async findNearest(latitude: number, longitude: number) {
+    const vehicles = await this.prisma.vehicle.findMany({
+      select: {
+        id: true,
+        vehicle_name: true,
+        image_url: true,
+        price: true,
+        mitra: {
+          select: {
+            id: true,
+            mitra_name: true,
+            mitra_address: true,
+            mitra_description: true,
+            longitude: true,
+            latitude: true,
+          },
+        },
+      },
+    });
+
+    const result = vehicles
+      .map((vehicle) => {
+        const mitraLat = Number(vehicle.mitra.latitude);
+        const mitraLon = Number(vehicle.mitra.longitude);
+
+        const distance = haversineDistance(
+          latitude,
+          longitude,
+          mitraLat,
+          mitraLon,
+        );
+
+        return {
+          ...vehicle,
+          distance_km: Number(distance.toFixed(2)),
+          mitra: {
+            ...vehicle.mitra,
+            latitude: mitraLat,
+            longitude: mitraLon,
+          },
+        };
+      })
+      .filter((vehicle) => vehicle !== null)
+      .sort((a, b) => a.distance_km - b.distance_km);
+
+    return result.map((item) => new NearestVehicleEntity(item));
   }
 
   async findOne(id: number, userId?: number): Promise<VehicleOutput | null> {
