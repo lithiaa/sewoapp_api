@@ -14,10 +14,9 @@ async function main() {
   console.log('seeding database...');
 
   const password = 'password';
-
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // user seeder with 3 roles: ADMIN, PARTNER, CUSTOMER
+  // users
   const admin = await prisma.user.create({
     data: {
       fullname: 'Admin Super',
@@ -57,7 +56,23 @@ async function main() {
     },
   });
 
-  // verification seeder for customer
+  // mitra profile for partner
+  const mitraProfile = await prisma.mitraProfile.create({
+    data: {
+      user_id: partner.id,
+      mitra_name: 'Mitra Rental Bandung',
+      mitra_image: 'https://dummy.com/mitra.jpg',
+      mitra_address: 'Jl. Sukajadi No. 123, Bandung',
+      mitra_description: 'Rental kendaraan terpercaya di Bandung',
+      general_information: 'Tersedia mobil & motor',
+      operating_hours: '08:00 - 20:00',
+      contact_number: '08123456789',
+      longitude: '107.6186',
+      latitude: '-6.9039',
+    },
+  });
+
+  // verification customer
   await prisma.userVerification.create({
     data: {
       user_id: customer.id,
@@ -70,7 +85,7 @@ async function main() {
     },
   });
 
-  // otp verification seeder for customer
+  // OTP
   await prisma.otpVerification.create({
     data: {
       user_id: customer.id,
@@ -79,7 +94,6 @@ async function main() {
     },
   });
 
-  // password reset token seeder for customer
   await prisma.passwordResetToken.create({
     data: {
       email: customer.email,
@@ -88,7 +102,7 @@ async function main() {
     },
   });
 
-  // category seeder
+  // category
   const motor = await prisma.category.create({
     data: { name: 'Motor', description: 'Kendaraan roda dua' },
   });
@@ -104,10 +118,10 @@ async function main() {
     },
   });
 
-  // vehicle seeder
-  const vehicle1 = await prisma.vehicle.create({
+  // vehicles
+  const v1 = await prisma.vehicle.create({
     data: {
-      partner_id: partner.id,
+      mitra_id: mitraProfile.id,
       category_id: mobil.id,
       vehicle_name: 'Toyota Camry',
       price: 500000,
@@ -123,9 +137,9 @@ async function main() {
     },
   });
 
-  const vehicle2 = await prisma.vehicle.create({
+  const v2 = await prisma.vehicle.create({
     data: {
-      partner_id: partner.id,
+      mitra_id: mitraProfile.id,
       category_id: motor.id,
       vehicle_name: 'Yamaha NMAX',
       price: 150000,
@@ -141,9 +155,9 @@ async function main() {
     },
   });
 
-  const vehicle3 = await prisma.vehicle.create({
+  const v3 = await prisma.vehicle.create({
     data: {
-      partner_id: partner.id,
+      mitra_id: mitraProfile.id,
       category_id: listrik.id,
       vehicle_name: 'Tesla Model 3',
       price: 1200000,
@@ -159,21 +173,21 @@ async function main() {
     },
   });
 
-  // rating seeder
+  // rating
   await prisma.rating.create({
     data: {
       customer_id: customer.id,
-      vehicle_id: vehicle1.id,
+      vehicle_id: v1.id,
       rating: 5,
       review: 'Mobil bagus dan nyaman',
     },
   });
 
-  // favorite seeder
+  // favorite
   await prisma.favorite.create({
     data: {
       customer_id: customer.id,
-      vehicle_id: vehicle2.id,
+      vehicle_id: v2.id,
     },
   });
 

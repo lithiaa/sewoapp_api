@@ -20,6 +20,8 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -30,6 +32,8 @@ import { Role } from 'generated/prisma';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { GetVehiclesFilterDto } from './dto/get-vehicle-filter.dto';
 import { Public } from 'src/common/decorators/public.decorator';
+import { NearestVehicleEntity } from './entities/get-nearest-vehicle';
+import { GetVehicleCategoryEntity } from './entities/get-vehicle-category';
 
 @Controller('vehicle')
 @ApiTags('vehicle')
@@ -67,7 +71,7 @@ export class VehicleController {
 
   @Get()
   @Public()
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Vehicles retrieved successfully',
     type: VehicleEntity,
   })
@@ -85,9 +89,45 @@ export class VehicleController {
     };
   }
 
+  @Get('nearest')
+  @ApiQuery({ name: 'longitude', required: true })
+  @ApiQuery({ name: 'latitude', required: true })
+  @ApiOkResponse({
+    description: 'Get nearest mitra profiles',
+    type: [NearestVehicleEntity],
+  })
+  async findNearest(
+    @Query('longitude') longitude: string,
+    @Query('latitude') latitude: string,
+  ) {
+    const data = await this.vehicleService.findNearest(
+      Number(latitude),
+      Number(longitude),
+    );
+
+    return {
+      data,
+      message: 'Nearest vehicles retrieved successfully',
+    };
+  }
+
+  @Get('category/:id')
+  @Public()
+  @ApiOkResponse({
+    description: 'Vehicles by category retrieved successfully',
+    type: [GetVehicleCategoryEntity],
+  })
+  async findByCategory(@Param('id') id: string) {
+    const data = await this.vehicleService.findByCategeory(+id);
+    return {
+      data,
+      message: 'Vehicles by category retrieved successfully',
+    };
+  }
+
   @Get(':id')
   @Public()
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Vehicle detail retrieved successfully',
     type: VehicleEntity,
   })
@@ -102,7 +142,7 @@ export class VehicleController {
   }
 
   @Patch(':id')
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Vehicle updated successfully',
     type: VehicleEntity,
   })
@@ -114,7 +154,7 @@ export class VehicleController {
   }
 
   @Delete(':id')
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Vehicle deleted successfully',
   })
   async remove(@Param('id') id: string) {

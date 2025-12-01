@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
@@ -9,6 +9,9 @@ import {
   VehicleOutput,
   VehicleWithConditionalFavorites,
 } from './types/vehicle.type';
+import { haversineDistance } from 'src/utils/haversine.utils';
+import { NearestVehicleEntity } from './entities/get-nearest-vehicle';
+import { GetVehicleCategoryEntity } from './entities/get-vehicle-category';
 
 @Injectable()
 export class VehicleService {
@@ -22,13 +25,21 @@ export class VehicleService {
     imageFile?: Express.Multer.File,
   ) {
     const imageUrl = imageFile
-      ? await this.cloudinary.uploadFile(imageFile, `vehicles`)
+      ? await this.cloudinary.uploadFile(imageFile, `mitra-profiles`)
       : null;
+
+    const mitraProfile = await this.prisma.mitraProfile.findFirst({
+      where: { user_id: userId },
+    });
+
+    if (!mitraProfile) {
+      throw new NotFoundException('You do not have a mitra profile');
+    }
 
     const result = await this.prisma.vehicle.create({
       data: {
         ...dto,
-        partner_id: userId,
+        mitra_id: mitraProfile.id,
         image_url: imageUrl ? imageUrl.secure_url : null,
       },
     });
@@ -57,10 +68,12 @@ export class VehicleService {
       capacity: true,
       created_at: true,
       updated_at: true,
-      partner: {
+      mitra: {
         select: {
           id: true,
-          fullname: true,
+          mitra_name: true,
+          mitra_address: true,
+          mitra_description: true,
         },
       },
       category: {
@@ -105,14 +118,95 @@ export class VehicleService {
     });
   }
 
+  async findNearest(latitude: number, longitude: number) {
+    const vehicles = await this.prisma.vehicle.findMany({
+      select: {
+        id: true,
+        vehicle_name: true,
+        image_url: true,
+        price: true,
+        mitra: {
+          select: {
+            id: true,
+            mitra_name: true,
+            mitra_address: true,
+            mitra_description: true,
+            longitude: true,
+            latitude: true,
+          },
+        },
+      },
+    });
+
+    const result = vehicles
+      .map((vehicle) => {
+        const mitraLat = Number(vehicle.mitra.latitude);
+        const mitraLon = Number(vehicle.mitra.longitude);
+
+        const distance = haversineDistance(
+          latitude,
+          longitude,
+          mitraLat,
+          mitraLon,
+        );
+
+        // TODO: implement with favorite status when user authenticated
+        return {
+          ...vehicle,
+          distance_km: Number(distance.toFixed(2)),
+          mitra: {
+            ...vehicle.mitra,
+            latitude: mitraLat,
+            longitude: mitraLon,
+          },
+        };
+      })
+      .filter((vehicle) => vehicle !== null)
+      .sort((a, b) => a.distance_km - b.distance_km);
+
+    return result.map((item) => new NearestVehicleEntity(item));
+  }
+
+  async findByCategeory(id: number) {
+    const result = await this.prisma.vehicle.findMany({
+      where: { category_id: id },
+      select: {
+        id: true,
+        vehicle_name: true,
+        image_url: true,
+        price: true,
+        mitra: {
+          select: {
+            id: true,
+            mitra_name: true,
+            mitra_address: true,
+            mitra_description: true,
+            longitude: true,
+            latitude: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return result.map((item) => new GetVehicleCategoryEntity(item));
+  }
+
   async findOne(id: number, userId?: number): Promise<VehicleOutput | null> {
     const result = await this.prisma.vehicle.findUnique({
       where: { id },
       include: {
-        partner: {
+        mitra: {
           select: {
             id: true,
-            fullname: true,
+            mitra_name: true,
+            mitra_address: true,
+            mitra_description: true,
           },
         },
         category: {
@@ -150,10 +244,15 @@ export class VehicleService {
   }
 
   async update(id: number, updateVehicleDto: UpdateVehicleDto) {
+    // TODO: implement update logic with image handling (cloudinary)
     const result = await this.prisma.vehicle.update({
       where: { id },
       data: updateVehicleDto,
     });
+
+    if (!result) {
+      throw new NotFoundException('Vehicle not found');
+    }
 
     return result;
   }
