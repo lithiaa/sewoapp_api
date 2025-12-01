@@ -11,6 +11,7 @@ import {
 } from './types/vehicle.type';
 import { haversineDistance } from 'src/utils/haversine.utils';
 import { NearestVehicleEntity } from './entities/get-nearest-vehicle';
+import { GetVehicleCategoryEntity } from './entities/get-vehicle-category';
 
 @Injectable()
 export class VehicleService {
@@ -149,6 +150,7 @@ export class VehicleService {
           mitraLon,
         );
 
+        // TODO: implement with favorite status when user authenticated
         return {
           ...vehicle,
           distance_km: Number(distance.toFixed(2)),
@@ -163,6 +165,36 @@ export class VehicleService {
       .sort((a, b) => a.distance_km - b.distance_km);
 
     return result.map((item) => new NearestVehicleEntity(item));
+  }
+
+  async findByCategeory(id: number) {
+    const result = await this.prisma.vehicle.findMany({
+      where: { category_id: id },
+      select: {
+        id: true,
+        vehicle_name: true,
+        image_url: true,
+        price: true,
+        mitra: {
+          select: {
+            id: true,
+            mitra_name: true,
+            mitra_address: true,
+            mitra_description: true,
+            longitude: true,
+            latitude: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return result.map((item) => new GetVehicleCategoryEntity(item));
   }
 
   async findOne(id: number, userId?: number): Promise<VehicleOutput | null> {

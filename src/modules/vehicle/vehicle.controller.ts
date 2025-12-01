@@ -33,6 +33,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { GetVehiclesFilterDto } from './dto/get-vehicle-filter.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import { NearestVehicleEntity } from './entities/get-nearest-vehicle';
+import { GetVehicleCategoryEntity } from './entities/get-vehicle-category';
 
 @Controller('vehicle')
 @ApiTags('vehicle')
@@ -107,6 +108,20 @@ export class VehicleController {
     return {
       data,
       message: 'Nearest vehicles retrieved successfully',
+    };
+  }
+
+  @Get('category/:id')
+  @Public()
+  @ApiOkResponse({
+    description: 'Vehicles by category retrieved successfully',
+    type: [GetVehicleCategoryEntity],
+  })
+  async findByCategory(@Param('id') id: string) {
+    const data = await this.vehicleService.findByCategeory(+id);
+    return {
+      data,
+      message: 'Vehicles by category retrieved successfully',
     };
   }
 
