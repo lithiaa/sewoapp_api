@@ -16,7 +16,14 @@ export type VehicleWithConditionalFavorites = Prisma.VehicleGetPayload<{
     capacity: true;
     created_at: true;
     updated_at: true;
-    partner: { select: { id: true; fullname: true } };
+    mitra: {
+      select: {
+        id: true;
+        mitra_name: true;
+        mitra_address: true;
+        mitra_description: true;
+      };
+    };
     category: { select: { name: true } };
     favorites: { where: { customer_id: number }; select: { id: true } } | false;
   };

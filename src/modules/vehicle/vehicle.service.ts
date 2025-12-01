@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
@@ -22,13 +22,21 @@ export class VehicleService {
     imageFile?: Express.Multer.File,
   ) {
     const imageUrl = imageFile
-      ? await this.cloudinary.uploadFile(imageFile, `vehicles`)
+      ? await this.cloudinary.uploadFile(imageFile, `mitra-profiles`)
       : null;
+
+    const mitraProfile = await this.prisma.mitraProfile.findFirst({
+      where: { user_id: userId },
+    });
+
+    if (!mitraProfile) {
+      throw new NotFoundException('You do not have a mitra profile');
+    }
 
     const result = await this.prisma.vehicle.create({
       data: {
         ...dto,
-        partner_id: userId,
+        mitra_id: mitraProfile.id,
         image_url: imageUrl ? imageUrl.secure_url : null,
       },
     });
@@ -57,10 +65,12 @@ export class VehicleService {
       capacity: true,
       created_at: true,
       updated_at: true,
-      partner: {
+      mitra: {
         select: {
           id: true,
-          fullname: true,
+          mitra_name: true,
+          mitra_address: true,
+          mitra_description: true,
         },
       },
       category: {
@@ -109,10 +119,12 @@ export class VehicleService {
     const result = await this.prisma.vehicle.findUnique({
       where: { id },
       include: {
-        partner: {
+        mitra: {
           select: {
             id: true,
-            fullname: true,
+            mitra_name: true,
+            mitra_address: true,
+            mitra_description: true,
           },
         },
         category: {
@@ -150,10 +162,15 @@ export class VehicleService {
   }
 
   async update(id: number, updateVehicleDto: UpdateVehicleDto) {
+    // TODO: implement update logic with image handling (cloudinary)
     const result = await this.prisma.vehicle.update({
       where: { id },
       data: updateVehicleDto,
     });
+
+    if (!result) {
+      throw new NotFoundException('Vehicle not found');
+    }
 
     return result;
   }

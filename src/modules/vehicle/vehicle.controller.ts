@@ -20,6 +20,7 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -67,7 +68,7 @@ export class VehicleController {
 
   @Get()
   @Public()
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Vehicles retrieved successfully',
     type: VehicleEntity,
   })
@@ -87,7 +88,7 @@ export class VehicleController {
 
   @Get(':id')
   @Public()
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Vehicle detail retrieved successfully',
     type: VehicleEntity,
   })
@@ -102,7 +103,7 @@ export class VehicleController {
   }
 
   @Patch(':id')
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Vehicle updated successfully',
     type: VehicleEntity,
   })
@@ -114,7 +115,7 @@ export class VehicleController {
   }
 
   @Delete(':id')
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Vehicle deleted successfully',
   })
   async remove(@Param('id') id: string) {
