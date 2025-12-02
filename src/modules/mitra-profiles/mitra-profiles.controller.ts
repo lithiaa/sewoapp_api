@@ -34,7 +34,7 @@ import { GetAllMitraProfileEntity } from './entities/get-mitra-profile.entity';
 import { GetNearestMitraEntity } from './entities/get-nearest-mitra.entity';
 
 @Controller('mitra-profiles')
-@ApiTags('mitra-profiles')
+@ApiTags('Profile Mitra')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MitraProfilesController {
