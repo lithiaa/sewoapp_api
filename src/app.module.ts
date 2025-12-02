@@ -10,9 +10,21 @@ import { VehicleModule } from './modules/vehicle/vehicle.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
 import { RatingModule } from './modules/rating/rating.module';
 import { MitraProfilesModule } from './modules/mitra-profiles/mitra-profiles.module';
+import { MitraRatingModule } from './modules/mitra-rating/mitra-rating.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, VerificationModule, CloudinaryModule, CategoryModule, VehicleModule, FavoriteModule, RatingModule, MitraProfilesModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    VerificationModule,
+    CloudinaryModule,
+    CategoryModule,
+    VehicleModule,
+    FavoriteModule,
+    RatingModule,
+    MitraProfilesModule,
+    MitraRatingModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

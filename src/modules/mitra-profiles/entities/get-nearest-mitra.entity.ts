@@ -4,29 +4,50 @@ export class GetNearestMitraEntity {
   @ApiProperty()
   id: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Image of the mitra',
+  })
   mitra_image: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Name of the mitra',
+  })
   mitra_name: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Address of the mitra',
+  })
   mitra_address: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Operating hours of the mitra',
+  })
   operating_hours: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Description of the mitra',
+  })
   mitra_description?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Longitude of the mitra location',
+  })
   longitude: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Latitude of the mitra location',
+  })
   latitude: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Distance from the given location to the mitra in kilometers',
+  })
   distance_km: number;
+
+  @ApiProperty({
+    description: 'Vehicle count owned by the mitra',
+  })
+  vehicle_count: number;
 
   constructor(partial: Partial<GetNearestMitraEntity>) {
     Object.assign(this, partial);

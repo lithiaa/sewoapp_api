@@ -89,15 +89,10 @@ export class MitraProfilesService {
 
   async findNearest(latitude: number, longitude: number) {
     const mitras = await this.prisma.mitraProfile.findMany({
-      select: {
-        id: true,
-        mitra_image: true,
-        mitra_name: true,
-        mitra_address: true,
-        operating_hours: true,
-        mitra_description: true,
-        longitude: true,
-        latitude: true,
+      include: {
+        _count: {
+          select: { vehicles: true },
+        },
       },
     });
 
@@ -114,10 +109,16 @@ export class MitraProfilesService {
         );
 
         return {
-          ...mitra,
+          id: mitra.id,
+          mitra_name: mitra.mitra_name,
+          mitra_address: mitra.mitra_address,
+          mitra_image: mitra.mitra_image,
+          mitra_description: mitra.mitra_description,
+          operating_hours: mitra.operating_hours,
           latitude: mitraLat,
           longitude: mitraLon,
           distance_km: Number(distance.toFixed(2)),
+          vehicle_count: mitra._count.vehicles,
         };
       })
       .sort((a, b) => a.distance_km - b.distance_km);

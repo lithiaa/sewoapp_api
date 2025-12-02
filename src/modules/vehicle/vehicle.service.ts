@@ -197,6 +197,50 @@ export class VehicleService {
     return result.map((item) => new GetVehicleCategoryEntity(item));
   }
 
+  async findAllByMitraId(mitraId: number, userId?: number) {
+    const baseSelect = {
+      id: true,
+      vehicle_name: true,
+      price: true,
+      image_url: true,
+      status: true,
+    };
+
+    const select = {
+      ...baseSelect,
+      ...(userId && {
+        favorites: {
+          where: {
+            customer_id: userId,
+          },
+          select: {
+            id: true,
+          },
+        },
+      }),
+    };
+
+    const result = await this.prisma.vehicle.findMany({
+      where: { mitra_id: mitraId },
+      orderBy: { created_at: 'desc' },
+      select: select,
+    });
+
+    return result.map((vehicle) => {
+      const data = vehicle as VehicleWithConditionalFavorites;
+
+      const isFavorited =
+        (userId && data.favorites && data.favorites.length > 0) ?? false;
+
+      const { favorites, ...vehicleWithoutFavorites } = data;
+
+      return {
+        ...vehicleWithoutFavorites,
+        is_favorited: isFavorited,
+      } as VehicleOutput;
+    });
+  }
+
   async findOne(id: number, userId?: number): Promise<VehicleOutput | null> {
     const result = await this.prisma.vehicle.findUnique({
       where: { id },
