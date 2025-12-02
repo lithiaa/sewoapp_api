@@ -34,6 +34,7 @@ import { GetVehiclesFilterDto } from './dto/get-vehicle-filter.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import { NearestVehicleEntity } from './entities/get-nearest-vehicle';
 import { GetVehicleCategoryEntity } from './entities/get-vehicle-category';
+import { GetVehicleByMitraEntity } from './entities/get-vehicle-by-mitra.entity';
 
 @Controller('vehicle')
 @ApiTags('vehicle')
@@ -108,6 +109,26 @@ export class VehicleController {
     return {
       data,
       message: 'Nearest vehicles retrieved successfully',
+    };
+  }
+
+  @Get('mitra/:mitraId')
+  @Public()
+  @ApiOkResponse({
+    description: 'Get vehicles by mitra retrieved successfully',
+    type: [GetVehicleByMitraEntity],
+  })
+  async findByMitra(
+    @Param('mitraId') mitraId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user?.id;
+
+    const data = await this.vehicleService.findAllByMitraId(+mitraId, userId);
+
+    return {
+      data,
+      message: 'Vehicles by mitra retrieved successfully',
     };
   }
 
