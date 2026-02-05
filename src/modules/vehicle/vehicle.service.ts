@@ -120,11 +120,7 @@ export class VehicleService {
 
   async findNearest(latitude: number, longitude: number) {
     const vehicles = await this.prisma.vehicle.findMany({
-      select: {
-        id: true,
-        vehicle_name: true,
-        image_url: true,
-        price: true,
+      include: {
         mitra: {
           select: {
             id: true,
@@ -134,6 +130,12 @@ export class VehicleService {
             longitude: true,
             latitude: true,
           },
+        },
+        _count: {
+          select: { ratings: true },
+        },
+        ratings: {
+          select: { rating: true },
         },
       },
     });
@@ -150,18 +152,31 @@ export class VehicleService {
           mitraLon,
         );
 
-        // TODO: implement with favorite status when user authenticated
+        const total_ratings = vehicle.ratings.length;
+        const average_rating =
+          total_ratings > 0
+            ? vehicle.ratings.reduce((sum, r) => sum + r.rating, 0) /
+              total_ratings
+            : 0;
+
         return {
-          ...vehicle,
+          id: vehicle.id,
+          vehicle_name: vehicle.vehicle_name,
+          image_url: vehicle.image_url,
+          price: vehicle.price,
           distance_km: Number(distance.toFixed(2)),
           mitra: {
-            ...vehicle.mitra,
-            latitude: mitraLat,
-            longitude: mitraLon,
+            id: vehicle.mitra.id,
+            mitra_name: vehicle.mitra.mitra_name,
+            mitra_address: vehicle.mitra.mitra_address,
+            mitra_description: vehicle.mitra.mitra_description,
+            longitude: mitraLat,
+            latitude: mitraLon,
           },
+          average_rating: Number(average_rating.toFixed(1)),
+          total_ratings,
         };
       })
-      .filter((vehicle) => vehicle !== null)
       .sort((a, b) => a.distance_km - b.distance_km);
 
     return result.map((item) => new NearestVehicleEntity(item));

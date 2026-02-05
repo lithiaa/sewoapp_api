@@ -39,6 +39,12 @@ export class NearestVehicleEntity {
   @ApiProperty({ type: MitraEntity })
   mitra: MitraEntity;
 
+  @ApiProperty({ description: 'Average rating of the vehicle', example: 4.5 })
+  average_rating?: number;
+
+  @ApiProperty({ description: 'Total number of ratings', example: 12 })
+  total_ratings?: number;
+
   constructor(partial: Partial<NearestVehicleEntity>) {
     Object.assign(this, partial);
   }

@@ -11,6 +11,7 @@ import { FavoriteModule } from './modules/favorite/favorite.module';
 import { RatingModule } from './modules/rating/rating.module';
 import { MitraProfilesModule } from './modules/mitra-profiles/mitra-profiles.module';
 import { MitraRatingModule } from './modules/mitra-rating/mitra-rating.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MitraRatingModule } from './modules/mitra-rating/mitra-rating.module';
     RatingModule,
     MitraProfilesModule,
     MitraRatingModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
