@@ -1,26 +1,57 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/infra/database/prisma/prisma.service';
+import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private prisma: PrismaService) {}
+
+  async getAllUsers(): Promise<UserEntity[]> {
+    const results = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        fullname: true,
+        username: true,
+        email: true,
+        phone_number: true,
+        address: true,
+        role: true,
+        is_verified: true,
+        created_at: true,
+      },
+    });
+
+    return results.map((user) => new UserEntity(user));
   }
 
-  findAll() {
-    return `This action returns all user`;
-  }
+  async getUserById(id: number): Promise<UserEntity> {
+    if (!id) {
+      throw new BadRequestException('User ID is required');
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+    const result = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        fullname: true,
+        username: true,
+        email: true,
+        phone_number: true,
+        address: true,
+        role: true,
+        is_verified: true,
+        created_at: true,
+      },
+    });
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+    if (!result) {
+      throw new NotFoundException('User not found');
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    return new UserEntity(result);
   }
 }

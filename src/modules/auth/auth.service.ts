@@ -243,4 +243,40 @@ export class AuthService {
 
     return { valid: true };
   }
+
+  async resendOtp(email: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.is_verified) {
+      throw new BadRequestException('User is already verified');
+    }
+
+    await this.prisma.otpVerification.deleteMany({
+      where: { user_id: user.id },
+    });
+
+    const otp = randomInt(100000, 999999).toString();
+
+    await this.prisma.otpVerification.create({
+      data: {
+        user_id: user.id,
+        otp_code: otp,
+        expires_at: new Date(Date.now() + 5 * 60 * 1000), // 5 menit
+      },
+    });
+
+    await this.mailService.sendMail(
+      user.email,
+      'Verifikasi Akun Anda - OTP Baru',
+      `
+      <h2>Halo, ${user.fullname}!</h2>
+      <p>Anda meminta kode OTP baru. Kode OTP Anda adalah:</p>
+      <h1>${otp}</h1>
+      <p>Kode ini berlaku selama 5 menit.</p>
+    `,
+    );
+
+    return { message: 'OTP has been sent to your email' };
+  }
 }

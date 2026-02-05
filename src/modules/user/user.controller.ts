@@ -1,34 +1,61 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Req } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'generated/prisma';
+import { UserEntity } from './entities/user.entity';
+import type { AuthenticatedRequest } from 'src/common/interfaces/request.interface';
 
 @Controller('user')
+@ApiTags('user')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  @Roles(Role.ADMIN)
+  @Get()
+  @ApiOkResponse({
+    description: 'List of all users',
+    type: [UserEntity],
+  })
+  async findAll() {
+    const data = await this.userService.getAllUsers();
+
+    return {
+      data,
+      message: 'Users retrieved successfully',
+    };
   }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
+  @Get('current')
+  @ApiOkResponse({
+    description: 'Current authenticated user details',
+    type: UserEntity,
+  })
+  async getCurrentUser(@Req() req: AuthenticatedRequest) {
+    const userId = req.user.id;
+    const data = await this.userService.getUserById(userId);
+
+    return {
+      data,
+      message: 'Current user retrieved successfully',
+    };
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
-  }
+  @ApiOkResponse({
+    description: 'User details',
+    type: UserEntity,
+  })
+  async findOne(@Param('id') id: string) {
+    const data = await this.userService.getUserById(+id);
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+    return {
+      data,
+      message: 'User retrieved successfully',
+    };
   }
 }

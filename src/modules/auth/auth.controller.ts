@@ -7,6 +7,7 @@ import { LoginDto } from './dto/login.dto';
 import { RequestForgotPasswordEntity } from './entities/request-forgot-password.entity';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { RequestForgotPasswordDto } from './dto/request-forgot-password.dto';
+import { ResendOtpDto } from './dto/resend-otp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -86,6 +87,18 @@ export class AuthController {
     return {
       data: null,
       message: 'Password reset token is valid',
+    };
+  }
+
+  @Post('resend-otp')
+  @ApiCreatedResponse({
+    description: 'Resend OTP successfully',
+  })
+  async resendOtp(@Body() dto: ResendOtpDto) {
+    const data = await this.authService.resendOtp(dto.email);
+    return {
+      data: null,
+      message: data.message,
     };
   }
 }
