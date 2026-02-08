@@ -144,9 +144,24 @@ model MitraProfile{
   user User @relation("MitraProfiles", fields: [user_id], references: [id])
   vehicles Vehicle[] @relation("partnerVehicles")
   ratings MitraRating[] @relation("MitraRatings")
+  partner_document PartnerDocument? @relation("MitraPartnerDocument")
 
   @@map("mitra_profiles")
 }
+
+model PartnerDocument {
+  id Int @id @default(autoincrement())
+  mitra_id Int @unique
+  nib_document_url String
+  npwp_document_url String
+  bank_account_document_url String
+  business_address String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  mitra MitraProfile @relation("MitraPartnerDocument", fields: [mitra_id], references: [id])
+}
+
 
  model Vehicle{
   id Int @id @default(autoincrement())

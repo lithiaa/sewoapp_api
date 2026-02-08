@@ -279,4 +279,19 @@ export class AuthService {
 
     return { message: 'OTP has been sent to your email' };
   }
+
+  async checkUserVerifiedById(
+    userId: number,
+  ): Promise<{ is_verified: boolean }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        is_verified: true,
+      },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return { is_verified: user.is_verified };
+  }
 }
